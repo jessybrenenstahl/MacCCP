@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, for example v1.0.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install playback dependencies
+        run: brew install mpv
+
+      - name: Test
+        run: swift test
+
+      - name: Build DMG
+        env:
+          MACCCP_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || inputs.version }}
+          MACCCP_CODESIGN_IDENTITY: ${{ secrets.MACCCP_CODESIGN_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: |
+          VERSION="${MACCCP_VERSION#v}"
+          MACCCP_VERSION="$VERSION" scripts/package_dmg.sh
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MacCCP-DMG
+          path: |
+            dist/MacCCP-*.dmg
+            dist/MacCCP-*.dmg.sha256
+
+      - name: Publish GitHub release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            dist/MacCCP-*.dmg \
+            dist/MacCCP-*.dmg.sha256 \
+            --title "MacCCP ${GITHUB_REF_NAME}" \
+            --notes "Native macOS release with bundled libmpv/FFmpeg playback."

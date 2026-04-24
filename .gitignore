@@ -1,0 +1,7 @@
+Combined Community Codec Pack/
+.build/
+dist/
+.DS_Store
+TestMedia/
+TestReports/
+*.xcuserstate
