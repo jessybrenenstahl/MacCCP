@@ -27,5 +27,5 @@ if [[ -n "${APPLE_ID:-}" && -n "${APPLE_TEAM_ID:-}" && -n "${APPLE_APP_SPECIFIC_
   xcrun stapler staple "$DMG_PATH"
 fi
 
-shasum -a 256 "$DMG_PATH" > "$DMG_PATH.sha256"
+(cd "$ROOT_DIR/dist" && shasum -a 256 "$(basename "$DMG_PATH")" > "$(basename "$DMG_PATH").sha256")
 echo "$DMG_PATH"
