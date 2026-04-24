@@ -10,6 +10,18 @@ if [[ ! -d "$APP_BUNDLE" ]]; then
   "$ROOT_DIR/scripts/build_app.sh"
 fi
 
+if [[ "${MACCCP_REQUIRE_NOTARIZATION:-0}" == "1" ]]; then
+  if [[ -z "${APPLE_ID:-}" || -z "${APPLE_TEAM_ID:-}" || -z "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]]; then
+    echo "APPLE_ID, APPLE_TEAM_ID, and APPLE_APP_SPECIFIC_PASSWORD are required for notarized production releases" >&2
+    exit 2
+  fi
+
+  if [[ -z "${MACCCP_CODESIGN_IDENTITY:-}" || "${MACCCP_CODESIGN_IDENTITY:-}" == "-" ]]; then
+    echo "MACCCP_CODESIGN_IDENTITY is required for notarized production releases" >&2
+    exit 2
+  fi
+fi
+
 rm -f "$DMG_PATH" "$DMG_PATH.sha256"
 hdiutil create \
   -volname "MacCCP" \

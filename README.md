@@ -9,8 +9,9 @@ codec surprises.
 
 ## Download
 
-Download the latest DMG from the
-[MacCCP releases page](https://github.com/jessybrenenstahl/MacCCP/releases/latest).
+Production downloads are published on the
+[MacCCP releases page](https://github.com/jessybrenenstahl/MacCCP/releases/latest)
+after the app is Developer ID signed, notarized, and stapled.
 
 ## Features
 
@@ -41,17 +42,20 @@ The DMG is written to `dist/`.
 The GitHub Actions release workflow builds and uploads a DMG when a version tag
 such as `v1.0.0` is pushed.
 
-For unsigned public builds, the workflow produces an ad-hoc signed app bundle.
-For Developer ID distribution, configure these repository secrets before
-running a release:
+Public releases require Developer ID distribution credentials. Configure these
+repository secrets before pushing a version tag:
 
+- `BUILD_CERTIFICATE_BASE64`
+- `P12_PASSWORD`
+- `KEYCHAIN_PASSWORD`
 - `MACCCP_CODESIGN_IDENTITY`
 - `APPLE_ID`
 - `APPLE_TEAM_ID`
 - `APPLE_APP_SPECIFIC_PASSWORD`
 
-The build scripts already support hardened-runtime signing and notarization when
-those credentials are available.
+The release workflow imports the certificate into a temporary keychain, signs the
+app and bundled playback libraries, creates the DMG, submits it to Apple's
+notary service, staples the ticket, and uploads the final DMG plus checksum.
 
 ## License
 

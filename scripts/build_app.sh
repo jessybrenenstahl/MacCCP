@@ -133,6 +133,9 @@ SIGN_IDENTITY="${MACCCP_CODESIGN_IDENTITY:--}"
 SIGN_ARGS=(--force --sign "$SIGN_IDENTITY")
 if [[ "$SIGN_IDENTITY" != "-" ]]; then
   SIGN_ARGS=(--force --options runtime --entitlements "$ROOT_DIR/Resources/MacCCP.entitlements" --sign "$SIGN_IDENTITY")
+elif [[ "${MACCCP_REQUIRE_NOTARIZATION:-0}" == "1" ]]; then
+  echo "MACCCP_CODESIGN_IDENTITY must be set for a production notarized release" >&2
+  exit 2
 fi
 
 while IFS= read -r binary; do
@@ -142,7 +145,7 @@ while IFS= read -r binary; do
 done < <(find "$APP_FRAMEWORKS" -type f)
 
 codesign "${SIGN_ARGS[@]}" "$APP_BINARY"
-codesign --force --deep --sign "$SIGN_IDENTITY" "$APP_BUNDLE"
+codesign "${SIGN_ARGS[@]}" "$APP_BUNDLE"
 plutil -lint "$INFO_PLIST"
 
 echo "$APP_BUNDLE"
