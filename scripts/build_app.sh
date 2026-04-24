@@ -92,8 +92,6 @@ PLIST
 
 install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP_BINARY" 2>/dev/null || true
 
-declare -A COPIED_DYLIBS=()
-
 is_bundle_dependency() {
   local dependency="$1"
   [[ "$dependency" == /opt/homebrew/* || "$dependency" == /usr/local/* ]]
@@ -108,8 +106,7 @@ bundle_dependency() {
   basename="$(basename "$source")"
   local destination="$APP_FRAMEWORKS/$basename"
 
-  if [[ -z "${COPIED_DYLIBS[$basename]:-}" ]]; then
-    COPIED_DYLIBS[$basename]=1
+  if [[ ! -f "$destination" ]]; then
     cp -L "$source" "$destination"
     chmod u+w "$destination"
     install_name_tool -id "@rpath/$basename" "$destination" 2>/dev/null || true
