@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install playback dependencies
         run: brew install mpv
@@ -40,7 +40,7 @@ jobs:
           MACCCP_VERSION="$VERSION" scripts/package_dmg.sh
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: MacCCP-DMG
           path: |
