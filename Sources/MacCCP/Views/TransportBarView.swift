@@ -2,9 +2,15 @@ import SwiftUI
 
 struct TransportBarView: View {
     @ObservedObject var store: PlayerStore
+    let isOverlay: Bool
     @State private var scrubValue: Double?
 
     private let playbackRates: [Float] = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
+
+    init(store: PlayerStore, isOverlay: Bool = false) {
+        self.store = store
+        self.isOverlay = isOverlay
+    }
 
     var body: some View {
         VStack(spacing: 5) {
@@ -93,7 +99,7 @@ struct TransportBarView: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
-        .background(Color(nsColor: .controlBackgroundColor))
+        .background(isOverlay ? Color.black.opacity(0.78) : Color(nsColor: .controlBackgroundColor))
     }
 }
 
