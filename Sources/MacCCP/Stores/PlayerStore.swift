@@ -77,11 +77,11 @@ final class PlayerStore: ObservableObject {
         return playlist.firstIndex { $0.id == selectedItemID }
     }
 
-    func attachVideo(to view: NSView) {
+    func attachVideo(to renderer: MPVVideoRenderer) {
         guard !hasAttachedVideo else { return }
 
         hasAttachedVideo = true
-        mpvClient.attach(to: view)
+        mpvClient.attach(to: renderer)
         mpvClient.setVolume(volume)
         mpvClient.setMuted(isMuted)
         mpvClient.setSpeed(Double(playbackRate))

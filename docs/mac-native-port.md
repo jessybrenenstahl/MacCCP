@@ -7,9 +7,9 @@ This workspace contains an unpacked Windows Combined Community Codec Pack distri
 - There is no MPC-HC or LAV source tree in this checkout.
 
 The native macOS implementation is therefore a replacement player built on SwiftUI,
-AppKit, libmpv, FFmpeg, and libass. It keeps the original CCCP goal of broad
-playback compatibility while replacing Windows DirectShow registration with a
-bundled native playback engine.
+AppKit, libmpv's render API, FFmpeg, and libass. It keeps the original CCCP goal
+of broad playback compatibility while replacing Windows DirectShow registration
+with a bundled native playback engine.
 
 The Mac release does not install global codecs or register system filters. macOS
 does not have a DirectShow-equivalent system codec model. Instead, MacCCP provides

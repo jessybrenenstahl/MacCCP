@@ -7,7 +7,7 @@ struct CCCPMacPlayerApp: App {
     @StateObject private var playerStore = PlayerStore()
 
     var body: some Scene {
-        WindowGroup("CCCP Player") {
+        Window("CCCP Player", id: "player") {
             ContentView(store: playerStore)
                 .frame(minWidth: 980, minHeight: 620)
                 .onAppear {
@@ -18,6 +18,7 @@ struct CCCPMacPlayerApp: App {
                     }
                 }
         }
+        .defaultSize(width: 1120, height: 700)
         .commands {
             PlayerCommands(store: playerStore)
         }
@@ -41,6 +42,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        false
+        true
     }
 }

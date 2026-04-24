@@ -16,11 +16,12 @@ after the app is Developer ID signed, notarized, and stapled.
 ## Features
 
 - libmpv playback backend with FFmpeg codec coverage
+- Embedded libmpv render surface inside the MacCCP window
 - Matroska/WebM/MP4/MOV/AVI/TS and other common containers
 - H.264, HEVC/H.265, VP9, AV1, MPEG-2, ProRes, FFV1, FLAC, Opus, AAC, and more through mpv/FFmpeg
 - libass subtitle rendering and automatic external subtitle discovery
 - Audio and subtitle track switching
-- Playlist sidebar with drag-and-drop opening
+- Classic CCCP/MPC-HC-style player shell with optional playlist pane
 - Resume position, configurable skip interval, volume, mute, and speed controls
 - Native macOS menus, toolbar, settings window, fullscreen, recent documents, and Finder reveal
 - DMG packaging with bundled native playback libraries

@@ -3,6 +3,11 @@ import CMpv
 import Foundation
 
 @MainActor
+protocol MPVVideoRenderer: AnyObject {
+    func attachMPV(handle: OpaquePointer) -> Bool
+}
+
+@MainActor
 final class MPVClient {
     var onPlaybackStateChanged: ((PlaybackState) -> Void)?
     var onTracksChanged: (([MediaSelectionTrack], [MediaSelectionTrack], String?, String) -> Void)?
@@ -13,8 +18,16 @@ final class MPVClient {
     private var handle: OpaquePointer?
     private var isInitialized = false
     private var pendingURL: URL?
+    private var playbackState = PlaybackState(
+        currentTime: 0,
+        duration: 0,
+        isPaused: true,
+        volume: 1,
+        isMuted: false,
+        speed: 1
+    )
 
-    func attach(to view: NSView) {
+    func attach(to renderer: MPVVideoRenderer) {
         guard !isInitialized else { return }
 
         guard let handle = mpv_create() else {
@@ -23,7 +36,7 @@ final class MPVClient {
         }
 
         self.handle = handle
-        configure(handle: handle, hostView: view)
+        configure(handle: handle)
 
         let selfPointer = Unmanaged.passUnretained(self).toOpaque()
         mpv_set_wakeup_callback(handle, { context in
@@ -42,6 +55,11 @@ final class MPVClient {
 
         isInitialized = true
         observeProperties(on: handle)
+
+        guard renderer.attachMPV(handle: handle) else {
+            onStatusChanged?("Unable to attach the native video renderer")
+            return
+        }
 
         if let pendingURL {
             self.pendingURL = nil
@@ -93,28 +111,23 @@ final class MPVClient {
 
     func selectAudioTrack(id: String) {
         command(["set", "aid", id])
-        refreshTrackList()
     }
 
     func selectSubtitleTrack(id: String) {
         let mpvID = id == MediaSelectionTrack.subtitlesOff.id ? "no" : id
         command(["set", "sid", mpvID])
-        refreshTrackList()
     }
 
     func cycleAudioTrack() {
         command(["cycle", "aid"])
-        refreshTrackList()
     }
 
     func cycleSubtitleTrack() {
         command(["cycle", "sid"])
-        refreshTrackList()
     }
 
     func addSubtitle(url: URL) {
         command(["sub-add", url.path, "select"])
-        refreshTrackList()
     }
 
     func screenshot() {
@@ -137,10 +150,8 @@ final class MPVClient {
         onTracksChanged?(audioTracks, subtitleTracks, parsedTracks.selectedAudioID ?? "auto", selectedSubtitle)
     }
 
-    private func configure(handle: OpaquePointer, hostView: NSView) {
-        let viewPointer = Int(bitPattern: Unmanaged.passUnretained(hostView).toOpaque())
-
-        setOption("wid", "\(viewPointer)", on: handle)
+    private func configure(handle: OpaquePointer) {
+        setOption("vo", "libmpv", on: handle)
         setOption("terminal", "no", on: handle)
         setOption("config", "no", on: handle)
         setOption("osc", "no", on: handle)
@@ -175,10 +186,9 @@ final class MPVClient {
             case MPV_EVENT_NONE:
                 return
             case MPV_EVENT_FILE_LOADED:
-                onFileLoaded?()
-                refreshTrackList()
+                enqueueMainCallback { $0.onFileLoaded?() }
             case MPV_EVENT_END_FILE:
-                onFileEnded?()
+                enqueueMainCallback { $0.onFileEnded?() }
             case MPV_EVENT_PROPERTY_CHANGE:
                 handlePropertyChange(event)
             case MPV_EVENT_SHUTDOWN:
@@ -196,24 +206,23 @@ final class MPVClient {
         let name = String(cString: property.name)
 
         switch name {
-        case "time-pos", "duration", "pause", "volume", "mute", "speed":
-            onPlaybackStateChanged?(snapshotPlaybackState())
+        case "time-pos":
+            updateDoubleProperty(property, keyPath: \.currentTime)
+        case "duration":
+            updateDoubleProperty(property, keyPath: \.duration)
+        case "volume":
+            updateDoubleProperty(property, keyPath: \.volume, transform: { $0 / 100 })
+        case "speed":
+            updateDoubleProperty(property, keyPath: \.speed)
+        case "pause":
+            updateFlagProperty(property, keyPath: \.isPaused)
+        case "mute":
+            updateFlagProperty(property, keyPath: \.isMuted)
         case "track-list":
-            refreshTrackList()
+            updateTrackList(property)
         default:
             break
         }
-    }
-
-    private func snapshotPlaybackState() -> PlaybackState {
-        PlaybackState(
-            currentTime: doubleProperty("time-pos"),
-            duration: doubleProperty("duration"),
-            isPaused: flagProperty("pause"),
-            volume: doubleProperty("volume") / 100,
-            isMuted: flagProperty("mute"),
-            speed: doubleProperty("speed")
-        )
     }
 
     private func command(_ args: [String]) {
@@ -268,6 +277,44 @@ final class MPVClient {
             _ = mpv_get_property(handle, cName, MPV_FORMAT_FLAG, &flag)
         }
         return flag != 0
+    }
+
+    private func enqueueMainCallback(_ callback: @escaping @MainActor (MPVClient) -> Void) {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            callback(self)
+        }
+    }
+
+    private func updateDoubleProperty(
+        _ property: mpv_event_property,
+        keyPath: WritableKeyPath<PlaybackState, Double>,
+        transform: (Double) -> Double = { $0 }
+    ) {
+        guard property.format == MPV_FORMAT_DOUBLE, let data = property.data else { return }
+
+        let rawValue = data.assumingMemoryBound(to: Double.self).pointee
+        playbackState[keyPath: keyPath] = rawValue.isFinite ? transform(rawValue) : 0
+        onPlaybackStateChanged?(playbackState)
+    }
+
+    private func updateFlagProperty(_ property: mpv_event_property, keyPath: WritableKeyPath<PlaybackState, Bool>) {
+        guard property.format == MPV_FORMAT_FLAG, let data = property.data else { return }
+
+        playbackState[keyPath: keyPath] = data.assumingMemoryBound(to: Int32.self).pointee != 0
+        onPlaybackStateChanged?(playbackState)
+    }
+
+    private func updateTrackList(_ property: mpv_event_property) {
+        guard property.format == MPV_FORMAT_NODE, let data = property.data else { return }
+
+        let parsedTracks = parseTrackList(data.assumingMemoryBound(to: mpv_node.self).pointee)
+        var audioTracks = [MediaSelectionTrack.audioAuto]
+        audioTracks.append(contentsOf: parsedTracks.audio)
+
+        let subtitleTracks = [MediaSelectionTrack.subtitlesOff] + parsedTracks.subtitles
+        let selectedSubtitle = parsedTracks.selectedSubtitleID ?? MediaSelectionTrack.subtitlesOff.id
+        onTracksChanged?(audioTracks, subtitleTracks, parsedTracks.selectedAudioID ?? "auto", selectedSubtitle)
     }
 
     private func parseTrackList(_ node: mpv_node) -> (audio: [MediaSelectionTrack], subtitles: [MediaSelectionTrack], selectedAudioID: String?, selectedSubtitleID: String?) {
@@ -350,12 +397,12 @@ final class MPVClient {
 }
 
 struct PlaybackState {
-    let currentTime: Double
-    let duration: Double
-    let isPaused: Bool
-    let volume: Double
-    let isMuted: Bool
-    let speed: Double
+    var currentTime: Double
+    var duration: Double
+    var isPaused: Bool
+    var volume: Double
+    var isMuted: Bool
+    var speed: Double
 }
 
 private struct MPVTrack {

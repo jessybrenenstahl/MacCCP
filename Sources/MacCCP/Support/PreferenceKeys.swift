@@ -8,6 +8,7 @@ enum PreferenceKeys {
     static let muted = "player.muted"
     static let skipInterval = "player.skipInterval"
     static let inspectorVisible = "ui.inspectorVisible"
+    static let playlistVisible = "ui.playlistVisible"
 }
 
 extension UserDefaults {
