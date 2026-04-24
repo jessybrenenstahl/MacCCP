@@ -34,6 +34,20 @@ struct PlayerCommands: Commands {
 
             Divider()
 
+            Button(store.isBorderlessFullscreen ? "Exit Borderless Fullscreen" : "Borderless Fullscreen") {
+                store.toggleBorderlessFullscreen()
+            }
+            .keyboardShortcut("f", modifiers: [.command, .shift])
+            .disabled(store.selectedItem == nil)
+
+            Button("Exit Borderless Fullscreen") {
+                store.exitBorderlessFullscreen()
+            }
+            .keyboardShortcut(.escape, modifiers: [])
+            .disabled(!store.isBorderlessFullscreen)
+
+            Divider()
+
             Button("Skip Backward") {
                 store.skipBackward()
             }

@@ -22,6 +22,7 @@ after the app is Developer ID signed, notarized, and stapled.
 - libass subtitle rendering and automatic external subtitle discovery
 - Audio and subtitle track switching
 - Seamless current-file looping backed by mpv's native file loop mode
+- Borderless fullscreen playback without macOS titlebar chrome
 - Classic CCCP/MPC-HC-style player shell with optional playlist pane
 - Resume position, configurable skip interval, volume, mute, and speed controls
 - Native macOS menus, toolbar, settings window, fullscreen, recent documents, and Finder reveal

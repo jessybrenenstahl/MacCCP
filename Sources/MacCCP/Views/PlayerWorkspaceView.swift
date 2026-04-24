@@ -2,26 +2,40 @@ import SwiftUI
 
 struct PlayerWorkspaceView: View {
     @ObservedObject var store: PlayerStore
+    let isBorderlessFullscreen: Bool
 
     var body: some View {
-        VStack(spacing: 0) {
-            ZStack {
-                Color.black
+        if isBorderlessFullscreen {
+            ZStack(alignment: .bottom) {
+                videoSurface
 
-                if store.selectedItem == nil {
-                    EmptyPlayerView {
-                        store.presentOpenPanel()
-                    }
-                } else {
-                    MPVPlayerContainerView(store: store)
-                }
+                TransportBarView(store: store)
+                    .background(.black.opacity(0.72))
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            VStack(spacing: 0) {
+                videoSurface
 
-            Divider()
+                Divider()
 
-            TransportBarView(store: store)
+                TransportBarView(store: store)
+            }
         }
+    }
+
+    private var videoSurface: some View {
+        ZStack {
+            Color.black
+
+            if store.selectedItem == nil {
+                EmptyPlayerView {
+                    store.presentOpenPanel()
+                }
+            } else {
+                MPVPlayerContainerView(store: store)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

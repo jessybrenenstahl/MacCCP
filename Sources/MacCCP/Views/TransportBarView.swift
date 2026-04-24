@@ -77,9 +77,12 @@ struct TransportBarView: View {
                     .controlSize(.small)
                     .frame(width: 96)
 
-                ClassicTransportButton("Fullscreen", systemImage: "arrow.up.left.and.arrow.down.right") {
-                    NSApp.keyWindow?.toggleFullScreen(nil)
-                }
+                ClassicTransportButton(
+                    store.isBorderlessFullscreen ? "Exit Borderless Fullscreen" : "Borderless Fullscreen",
+                    systemImage: store.isBorderlessFullscreen ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right",
+                    isActive: store.isBorderlessFullscreen,
+                    action: store.toggleBorderlessFullscreen
+                )
                 .disabled(store.selectedItem == nil)
 
                 Text(PlayerTimeFormatter.string(from: store.duration))

@@ -12,6 +12,7 @@ final class PlayerStore: ObservableObject {
     @Published var duration = 0.0
     @Published var statusMessage = "Ready"
     @Published var playbackRate: Float = 1.0
+    @Published var isBorderlessFullscreen = false
     @Published var isLoopingFile: Bool {
         didSet {
             defaults.set(isLoopingFile, forKey: PreferenceKeys.loopFile)
@@ -51,6 +52,9 @@ final class PlayerStore: ObservableObject {
         self.isMuted = defaults.bool(forKey: PreferenceKeys.muted, default: false)
         self.isLoopingFile = defaults.bool(forKey: PreferenceKeys.loopFile, default: false)
 
+        BorderlessFullscreenController.shared.onExit = { [weak self] in
+            self?.isBorderlessFullscreen = false
+        }
         configureMPVCallbacks()
     }
 
@@ -218,6 +222,17 @@ final class PlayerStore: ObservableObject {
     func setPlaybackRate(_ rate: Float) {
         playbackRate = rate
         mpvClient.setSpeed(Double(rate))
+    }
+
+    func toggleBorderlessFullscreen() {
+        isBorderlessFullscreen = BorderlessFullscreenController.shared.toggle()
+    }
+
+    func exitBorderlessFullscreen() {
+        guard isBorderlessFullscreen else { return }
+
+        BorderlessFullscreenController.shared.exit()
+        isBorderlessFullscreen = false
     }
 
     func toggleFileLooping() {

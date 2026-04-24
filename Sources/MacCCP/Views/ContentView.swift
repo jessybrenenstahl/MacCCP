@@ -8,14 +8,16 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ClassicTopBar(store: store, playlistVisible: $playlistVisible)
+            if !store.isBorderlessFullscreen {
+                ClassicTopBar(store: store, playlistVisible: $playlistVisible)
 
-            Divider()
+                Divider()
+            }
 
             HStack(spacing: 0) {
-                PlayerWorkspaceView(store: store)
+                PlayerWorkspaceView(store: store, isBorderlessFullscreen: store.isBorderlessFullscreen)
 
-                if playlistVisible {
+                if playlistVisible, !store.isBorderlessFullscreen {
                     Divider()
                     SidebarView(store: store)
                         .frame(width: 292)
@@ -23,9 +25,11 @@ struct ContentView: View {
                 }
             }
 
-            Divider()
+            if !store.isBorderlessFullscreen {
+                Divider()
 
-            ClassicStatusBar(store: store)
+                ClassicStatusBar(store: store)
+            }
         }
         .background(Color(nsColor: .windowBackgroundColor))
         .navigationTitle(store.selectedItem?.title ?? "CCCP Player")
@@ -39,6 +43,9 @@ struct ContentView: View {
             if isDropTargeted {
                 DropOverlayView()
             }
+        }
+        .onExitCommand {
+            store.exitBorderlessFullscreen()
         }
     }
 }
