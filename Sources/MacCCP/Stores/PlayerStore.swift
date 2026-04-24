@@ -12,6 +12,12 @@ final class PlayerStore: ObservableObject {
     @Published var duration = 0.0
     @Published var statusMessage = "Ready"
     @Published var playbackRate: Float = 1.0
+    @Published var isLoopingFile: Bool {
+        didSet {
+            defaults.set(isLoopingFile, forKey: PreferenceKeys.loopFile)
+            mpvClient.setFileLooping(isLoopingFile)
+        }
+    }
     @Published var volume: Double {
         didSet {
             defaults.set(volume, forKey: PreferenceKeys.defaultVolume)
@@ -43,6 +49,7 @@ final class PlayerStore: ObservableObject {
         self.historyStore = historyStore
         self.volume = defaults.double(forKey: PreferenceKeys.defaultVolume, default: 0.85)
         self.isMuted = defaults.bool(forKey: PreferenceKeys.muted, default: false)
+        self.isLoopingFile = defaults.bool(forKey: PreferenceKeys.loopFile, default: false)
 
         configureMPVCallbacks()
     }
@@ -85,6 +92,7 @@ final class PlayerStore: ObservableObject {
         mpvClient.setVolume(volume)
         mpvClient.setMuted(isMuted)
         mpvClient.setSpeed(Double(playbackRate))
+        mpvClient.setFileLooping(isLoopingFile)
     }
 
     func presentOpenPanel() {
@@ -210,6 +218,11 @@ final class PlayerStore: ObservableObject {
     func setPlaybackRate(_ rate: Float) {
         playbackRate = rate
         mpvClient.setSpeed(Double(rate))
+    }
+
+    func toggleFileLooping() {
+        isLoopingFile.toggle()
+        statusMessage = isLoopingFile ? "Loop current file" : "Loop off"
     }
 
     func selectAudioTrack(id: String) {

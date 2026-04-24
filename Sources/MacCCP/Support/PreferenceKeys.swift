@@ -2,6 +2,7 @@ import Foundation
 
 enum PreferenceKeys {
     static let autoplay = "player.autoplay"
+    static let loopFile = "player.loopFile"
     static let loopPlaylist = "player.loopPlaylist"
     static let rememberPosition = "player.rememberPosition"
     static let defaultVolume = "player.defaultVolume"

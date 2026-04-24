@@ -21,6 +21,7 @@ after the app is Developer ID signed, notarized, and stapled.
 - H.264, HEVC/H.265, VP9, AV1, MPEG-2, ProRes, FFV1, FLAC, Opus, AAC, and more through mpv/FFmpeg
 - libass subtitle rendering and automatic external subtitle discovery
 - Audio and subtitle track switching
+- Seamless current-file looping backed by mpv's native file loop mode
 - Classic CCCP/MPC-HC-style player shell with optional playlist pane
 - Resume position, configurable skip interval, volume, mute, and speed controls
 - Native macOS menus, toolbar, settings window, fullscreen, recent documents, and Finder reveal

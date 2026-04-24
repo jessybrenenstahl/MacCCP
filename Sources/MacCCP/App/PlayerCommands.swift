@@ -23,6 +23,15 @@ struct PlayerCommands: Commands {
             .keyboardShortcut(.space, modifiers: [])
             .disabled(store.playlist.isEmpty)
 
+            Toggle("Loop Current File", isOn: Binding {
+                store.isLoopingFile
+            } set: { newValue in
+                if store.isLoopingFile != newValue {
+                    store.toggleFileLooping()
+                }
+            })
+            .keyboardShortcut("l", modifiers: [])
+
             Divider()
 
             Button("Skip Backward") {

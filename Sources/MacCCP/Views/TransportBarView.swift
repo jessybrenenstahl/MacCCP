@@ -42,6 +42,12 @@ struct TransportBarView: View {
                     .disabled(store.selectedItem == nil)
                 ClassicTransportButton("Next", systemImage: "forward.end.fill", action: store.playNext)
                     .disabled(!store.hasNextItem)
+                ClassicTransportButton(
+                    store.isLoopingFile ? "Loop Current File On" : "Loop Current File",
+                    systemImage: "repeat.1",
+                    isActive: store.isLoopingFile,
+                    action: store.toggleFileLooping
+                )
 
                 Spacer(minLength: 8)
 
@@ -91,11 +97,13 @@ struct TransportBarView: View {
 private struct ClassicTransportButton: View {
     let title: String
     let systemImage: String
+    let isActive: Bool
     let action: () -> Void
 
-    init(_ title: String, systemImage: String, action: @escaping () -> Void) {
+    init(_ title: String, systemImage: String, isActive: Bool = false, action: @escaping () -> Void) {
         self.title = title
         self.systemImage = systemImage
+        self.isActive = isActive
         self.action = action
     }
 
@@ -104,6 +112,7 @@ private struct ClassicTransportButton: View {
             Image(systemName: systemImage)
                 .font(.system(size: 12, weight: .medium))
                 .frame(width: 24, height: 20)
+                .foregroundStyle(isActive ? Color.accentColor : Color.primary)
         }
         .buttonStyle(.borderless)
         .help(title)

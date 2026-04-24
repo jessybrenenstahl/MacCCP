@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @ObservedObject var store: PlayerStore
+
     @AppStorage(PreferenceKeys.autoplay) private var autoplay = true
     @AppStorage(PreferenceKeys.loopPlaylist) private var loopPlaylist = false
     @AppStorage(PreferenceKeys.rememberPosition) private var rememberPosition = true
@@ -11,6 +13,7 @@ struct SettingsView: View {
         Form {
             Section("Playback") {
                 Toggle("Start playback when media opens", isOn: $autoplay)
+                Toggle("Loop current file", isOn: $store.isLoopingFile)
                 Toggle("Loop playlist", isOn: $loopPlaylist)
                 Toggle("Resume previous position", isOn: $rememberPosition)
             }

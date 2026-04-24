@@ -109,6 +109,10 @@ final class MPVClient {
         setDoubleProperty("speed", speed)
     }
 
+    func setFileLooping(_ looping: Bool) {
+        command(["set", "loop-file", looping ? "inf" : "no"])
+    }
+
     func selectAudioTrack(id: String) {
         command(["set", "aid", id])
     }

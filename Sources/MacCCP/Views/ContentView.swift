@@ -71,6 +71,12 @@ private struct ClassicTopBar: View {
                 .disabled(store.selectedItem == nil)
             ClassicIconButton("Audio", systemImage: "speaker.wave.2", action: store.cycleAudioTrack)
                 .disabled(store.selectedItem == nil)
+            ClassicIconButton(
+                store.isLoopingFile ? "Loop Current File On" : "Loop Current File",
+                systemImage: "repeat.1",
+                isActive: store.isLoopingFile,
+                action: store.toggleFileLooping
+            )
 
             Spacer(minLength: 8)
 
@@ -99,11 +105,13 @@ private struct ClassicTopBar: View {
 private struct ClassicIconButton: View {
     let title: String
     let systemImage: String
+    let isActive: Bool
     let action: () -> Void
 
-    init(_ title: String, systemImage: String, action: @escaping () -> Void) {
+    init(_ title: String, systemImage: String, isActive: Bool = false, action: @escaping () -> Void) {
         self.title = title
         self.systemImage = systemImage
+        self.isActive = isActive
         self.action = action
     }
 
@@ -111,6 +119,7 @@ private struct ClassicIconButton: View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .frame(width: 24, height: 22)
+                .foregroundStyle(isActive ? Color.accentColor : Color.primary)
         }
         .help(title)
     }
@@ -129,6 +138,10 @@ private struct ClassicStatusBar: View {
 
             if !store.playlist.isEmpty {
                 Text("\((store.selectedIndex ?? 0) + 1)/\(store.playlist.count)")
+            }
+
+            if store.isLoopingFile {
+                Text("Loop")
             }
 
             Text("\(PlayerTimeFormatter.string(from: store.currentTime)) / \(PlayerTimeFormatter.string(from: store.duration))")

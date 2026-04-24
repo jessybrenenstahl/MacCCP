@@ -24,7 +24,7 @@ struct CCCPMacPlayerApp: App {
         }
 
         Settings {
-            SettingsView()
+            SettingsView(store: playerStore)
         }
     }
 }
